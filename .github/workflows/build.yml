@@ -39,4 +39,21 @@ jobs:
         repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
 
     - name: Clone Device Tree
-      run
+      run: |
+        cd work
+        git clone ${{ github.server_url }}/${{ github.repository }} device/tecno/li9
+
+    - name: Start Building Recovery
+      run: |
+        cd work
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export LC_ALL=C
+        source build/envsetup.sh
+        lunch twrp_li9-eng || lunch twrp_li9-userdebug
+        mka recoveryimage -j$(nproc --all)
+
+    - name: Upload TWRP Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TWRP-Tecno-li9-Fixed
+        path: work/out/target/product/li9/recovery.img
